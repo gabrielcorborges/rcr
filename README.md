@@ -30,7 +30,7 @@ No Zorin 18 (ou outras distros com Tkinter instalado), execute:
 python gui_app.py
 ```
 
-A interface permite inserir origens/destino, datas e adultos, inverter origem/destino ou datas, e exportar em JSON/CSV/Excel.
+A interface permite inserir origens/destino, datas e adultos, inverter origem/destino ou datas, visualizar a resposta organizada em tabela com índice e abrir os links por botões, além de exportar em JSON/CSV/Excel.
 
 ### Instalação no Zorin 18
 

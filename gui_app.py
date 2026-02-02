@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any, Optional
+import webbrowser
 
 from flight_links import (
     export_csv,
@@ -76,12 +76,54 @@ class FlightLinkApp(tk.Tk):
         container = ttk.Frame(self)
         container.pack(fill="both", expand=True, padx=16, pady=12)
 
-        self.result_text = tk.Text(container, wrap="none")
-        self.result_text.pack(side="left", fill="both", expand=True)
+        self.results: List[Dict[str, Any]] = []
 
-        scroll_y = ttk.Scrollbar(container, orient="vertical", command=self.result_text.yview)
+        columns = (
+            "index",
+            "origem",
+            "destino",
+            "latam_ida",
+            "latam_volta",
+            "azul_ida",
+            "azul_volta",
+        )
+        self.tree = ttk.Treeview(container, columns=columns, show="headings", height=12)
+        self.tree.heading("index", text="#")
+        self.tree.heading("origem", text="Origem")
+        self.tree.heading("destino", text="Destino")
+        self.tree.heading("latam_ida", text="LATAM Ida")
+        self.tree.heading("latam_volta", text="LATAM Volta")
+        self.tree.heading("azul_ida", text="Azul Ida")
+        self.tree.heading("azul_volta", text="Azul Volta")
+
+        self.tree.column("index", width=40, anchor="center")
+        self.tree.column("origem", width=80, anchor="center")
+        self.tree.column("destino", width=80, anchor="center")
+        self.tree.column("latam_ida", width=220)
+        self.tree.column("latam_volta", width=220)
+        self.tree.column("azul_ida", width=220)
+        self.tree.column("azul_volta", width=220)
+
+        self.tree.pack(side="left", fill="both", expand=True)
+
+        scroll_y = ttk.Scrollbar(container, orient="vertical", command=self.tree.yview)
         scroll_y.pack(side="right", fill="y")
-        self.result_text.configure(yscrollcommand=scroll_y.set)
+        self.tree.configure(yscrollcommand=scroll_y.set)
+
+        link_buttons = ttk.Frame(self)
+        link_buttons.pack(fill="x", padx=16, pady=(0, 12))
+        ttk.Button(link_buttons, text="Abrir LATAM Ida", command=lambda: self._open_link("latam", "ida")).pack(
+            side="left"
+        )
+        ttk.Button(
+            link_buttons, text="Abrir LATAM Volta", command=lambda: self._open_link("latam", "volta")
+        ).pack(side="left", padx=8)
+        ttk.Button(link_buttons, text="Abrir Azul Ida", command=lambda: self._open_link("azul", "ida")).pack(
+            side="left", padx=8
+        )
+        ttk.Button(link_buttons, text="Abrir Azul Volta", command=lambda: self._open_link("azul", "volta")).pack(
+            side="left", padx=8
+        )
 
     def _swap_routes(self) -> None:
         destination = self.destination_entry.get().strip().upper()
@@ -133,9 +175,8 @@ class FlightLinkApp(tk.Tk):
             messagebox.showerror("Erro", str(exc))
             return
 
-        data = results_to_dicts(results)
-        self.result_text.delete("1.0", tk.END)
-        self.result_text.insert(tk.END, json.dumps(data, ensure_ascii=False, indent=2))
+        self.results = results_to_dicts(results)
+        self._render_results()
 
     def _export(self, export_type: str) -> None:
         try:
@@ -173,6 +214,46 @@ class FlightLinkApp(tk.Tk):
             return
 
         messagebox.showinfo("Sucesso", "Arquivo exportado com sucesso!")
+
+    def _render_results(self) -> None:
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        for row in self.results:
+            self.tree.insert(
+                "",
+                "end",
+                values=(
+                    row["index"],
+                    row["origem"],
+                    row["destino"],
+                    row["latam"]["ida"],
+                    row["latam"]["volta"],
+                    row["azul"]["ida"],
+                    row["azul"]["volta"],
+                ),
+            )
+
+    def _get_selected_result(self) -> Optional[Dict[str, Any]]:
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning("Atenção", "Selecione uma linha para abrir o link.")
+            return None
+        item = self.tree.item(selection[0])
+        values = item.get("values", [])
+        if not values:
+            return None
+        index = int(values[0])
+        for row in self.results:
+            if row["index"] == index:
+                return row
+        return None
+
+    def _open_link(self, carrier: str, direction: str) -> None:
+        selected = self._get_selected_result()
+        if not selected:
+            return
+        url = selected[carrier][direction]
+        webbrowser.open(url)
 
 
 if __name__ == "__main__":
