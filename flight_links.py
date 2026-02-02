@@ -129,6 +129,7 @@ def generate_flight_links(
     airports_path: Path = DEFAULT_AIRPORTS_PATH,
     api_url: Optional[str] = None,
     api_key: Optional[str] = None,
+    validate_iata: bool = False,
 ) -> List[FlightLinkResult]:
     """Generate LATAM and Azul links for each origin airport.
 
@@ -136,11 +137,12 @@ def generate_flight_links(
         IATAValidationError: when any origin or destination is invalid.
     """
 
-    airports = load_airports(airports_path=airports_path, api_url=api_url, api_key=api_key)
-    codes_to_validate = list(origins) + [destination]
-    invalid = validate_iata_codes(codes_to_validate, airports)
-    if invalid:
-        raise IATAValidationError(f"Invalid IATA codes: {', '.join(sorted(set(invalid)))}")
+    if validate_iata:
+        airports = load_airports(airports_path=airports_path, api_url=api_url, api_key=api_key)
+        codes_to_validate = list(origins) + [destination]
+        invalid = validate_iata_codes(codes_to_validate, airports)
+        if invalid:
+            raise IATAValidationError(f"Invalid IATA codes: {', '.join(sorted(set(invalid)))}")
 
     results: List[FlightLinkResult] = []
     for idx, origin in enumerate(origins, start=1):
@@ -210,6 +212,7 @@ def generateFlightLinks(  # noqa: N802 - keeping requested name
     airports_path: Path = DEFAULT_AIRPORTS_PATH,
     api_url: Optional[str] = None,
     api_key: Optional[str] = None,
+    validate_iata: bool = False,
 ) -> List[Dict[str, Any]]:
     """Wrapper matching the requested function name in the prompt."""
 
@@ -222,6 +225,7 @@ def generateFlightLinks(  # noqa: N802 - keeping requested name
         airports_path=airports_path,
         api_url=api_url,
         api_key=api_key,
+        validate_iata=validate_iata,
     )
     return results_to_dicts(results)
 

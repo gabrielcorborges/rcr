@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import List
 
 from flight_links import (
-    IATAValidationError,
     export_csv,
     export_excel,
     export_json,
@@ -128,8 +127,9 @@ class FlightLinkApp(tk.Tk):
                 outbound_date=outbound,
                 inbound_date=inbound,
                 adults=adults,
+                validate_iata=False,
             )
-        except (ValueError, IATAValidationError) as exc:
+        except ValueError as exc:
             messagebox.showerror("Erro", str(exc))
             return
 
@@ -146,8 +146,9 @@ class FlightLinkApp(tk.Tk):
                 outbound_date=outbound,
                 inbound_date=inbound,
                 adults=adults,
+                validate_iata=False,
             )
-        except (ValueError, IATAValidationError) as exc:
+        except ValueError as exc:
             messagebox.showerror("Erro", str(exc))
             return
 

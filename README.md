@@ -1,6 +1,6 @@
 # Flight Link Generator (LATAM & Azul)
 
-Ferramenta em Python para validar códigos IATA e gerar links de busca de voos para LATAM e Azul.
+Ferramenta em Python para gerar links de busca de voos para LATAM e Azul usando os códigos IATA informados.
 
 ## Como usar
 
@@ -70,9 +70,9 @@ export_json(links, Path("links.json"))
 export_csv(links, Path("links.csv"))
 ```
 
-## Fonte de aeroportos
+## Validação de IATA (opcional)
 
-Por padrão, a lista de IATA é carregada de `data/airports.json`. Para usar uma API pública:
+Por padrão, o gerador usa exatamente os códigos informados (sem validação). Caso queira validar com uma lista local ou API, habilite `validate_iata=True`:
 
 ```python
 links = generate_flight_links(
@@ -80,7 +80,6 @@ links = generate_flight_links(
     destination="FOR",
     outbound_date="2024-10-15",
     inbound_date="2024-10-21",
-    api_url="https://sua-api.com/airports",
-    api_key="SUA_CHAVE",
+    validate_iata=True,
 )
 ```
